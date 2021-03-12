@@ -1,57 +1,84 @@
-# Uniswap V2 Subgraph
+# EasyDAI Subgraph
 
-[Uniswap](https://uniswap.org/) is a decentralized protocol for automated token exchange on Ethereum.
+## Setup
 
-This subgraph dynamically tracks any pair created by the uniswap factory. It tracks of the current state of Uniswap contracts, and contains derived stats for things like historical data and USD prices.
+### Prerequisites
 
-- aggregated data across pairs and tokens,
-- data on individual pairs and tokens,
-- data on transactions
-- data on liquidity providers
-- historical data on Uniswap, pairs or tokens, aggregated by day
+* Global Yarn Packages
+  * ganache-cli
+  * truffle
+  * graph-cli
+* Docker 
 
-## Running Locally
+### Services
 
-Make sure to update package.json settings to point to your own graph account.
+Start a ganache chain using 0.0.0.0 as a host so docker can connect
 
-## Queries
-
-Below are a few ways to show how to query the uniswap-subgraph for data. The queries show most of the information that is queryable, but there are many other filtering options that can be used, just check out the [querying api](https://thegraph.com/docs/graphql-api). These queries can be used locally or in The Graph Explorer playground.
-
-## Key Entity Overviews
-
-#### UniswapFactory
-
-Contains data across all of Uniswap V2. This entity tracks important things like total liquidity (in ETH and USD, see below), all time volume, transaction count, number of pairs and more.
-
-#### Token
-
-Contains data on a specific token. This token specific data is aggregated across all pairs, and is updated whenever there is a transaction involving that token.
-
-#### Pair
-
-Contains data on a specific pair.
-
-#### Transaction
-
-Every transaction on Uniswap is stored. Each transaction contains an array of mints, burns, and swaps that occured within it.
-
-#### Mint, Burn, Swap
-
-These contain specifc information about a transaction. Things like which pair triggered the transaction, amounts, sender, recipient, and more. Each is linked to a parent Transaction entity.
-
-## Example Queries
-
-### Querying Aggregated Uniswap Data
-
-This query fetches aggredated data from all uniswap pairs and tokens, to give a view into how much activity is happening within the whole protocol.
-
-```graphql
-{
-  uniswapFactories(first: 1) {
-    pairCount
-    totalVolumeUSD
-    totalLiquidityUSD
-  }
-}
 ```
+ganache-cli -h 0.0.0.0 -d -l 4294967295 --allowUnlimitedContractSize
+```
+
+Run a local graph node
+
+```
+git clone https://github.com/graphprotocol/graph-node/
+```
+
+Update ethereum value in docker-compose.yml to ganache:http://host.docker.internal:8545
+
+```
+cd graph-node/docker
+docker-compose up
+```
+
+To blow away graph-node settings
+
+```
+docker-compose kill && docker-compose rm -f && rm -rf data
+```
+
+
+### Subgraph
+
+Clone the balancer subgraph
+
+```
+git clone git@github.com:balancer-labs/balancer-subgraph.git
+```
+
+Update factory address in subgraph.yaml to the one listed as part of the deploy
+
+Install dependencies
+
+```
+yarn
+```
+
+Generate the graph code
+
+```
+yarn codegen
+```
+
+Create local node
+
+```
+yarn create:local
+```
+
+Deploy locally
+
+```
+yarn deploy:local
+```
+
+Any updates can be made to this repo and re-running yarn deploy:local without needing to re-initialize the environment.
+
+
+## Calculate balance, profit, accrued interest 
+
+Underlying Balance = `AccountBond.normalizedBalance` * `Market.exchangeRate`
+
+Current Profit = Underlying balance - `AccountBond.principalBalance`
+
+Accrued Interest = Underlying balance + `AccountBond.totalUnderlyingRedeemed` - `AccountBond.totalUnderlyingSupplied`
