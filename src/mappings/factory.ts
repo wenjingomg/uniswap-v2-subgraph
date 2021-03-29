@@ -16,7 +16,6 @@ import {
 export function handleNewPair(event: PairCreated): void {
   // load factory (create if first exchange)
   let factory = UniswapFactory.load(FACTORY_ADDRESS)
-
   if (factory === null) {
     factory = new UniswapFactory(FACTORY_ADDRESS)
     factory.pairCount = 0
@@ -85,7 +84,6 @@ export function handleNewPair(event: PairCreated): void {
   }
 
   let pair = new Pair(event.params.pair.toHexString()) as Pair
-
   pair.token0 = token0.id
   pair.token1 = token1.id
   pair.liquidityProviderCount = ZERO_BI
@@ -104,8 +102,6 @@ export function handleNewPair(event: PairCreated): void {
   pair.untrackedVolumeUSD = ZERO_BD
   pair.token0Price = ZERO_BD
   pair.token1Price = ZERO_BD
-
-  log.info('NEW_PAIR_CREATED', pair)
 
   // create the tracked contract based on the template
   PairTemplate.create(event.params.pair)
